@@ -4,7 +4,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.stage.FileChooser;
@@ -13,19 +12,11 @@ import javafx.stage.Stage;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
-import java.util.zip.Inflater;
-
-import static javafx.scene.input.KeyCode.T;
 
 public class Controller {
     final FileChooser fileChooser = new FileChooser();
@@ -47,10 +38,19 @@ public class Controller {
     private short[] resultantByteArray;
     private float originalFileSize;
 
+    // https://www.techiedelight.com/get-subarray-array-specified-indexes-java/
+    public static <Byte> byte[] subArray(byte[] array, int beg, int end) {
+        return Arrays.copyOfRange(array, beg, end + 1);
+    }
+
+    public static <Short> short[] subArray(short[] array, int beg, int end) {
+        return Arrays.copyOfRange(array, beg, end + 1);
+    }
+
     public void openFileAudio(ActionEvent event) throws IOException {
         File file = fileChooser.showOpenDialog(stage);
         if (file != null) {
-            originalFileSizeLabel.setText(String.format("%.2f", (float) file.length()/1024) + " KB");
+            originalFileSizeLabel.setText(String.format("%.2f", (float) file.length() / 1024) + " KB");
             originalFileSize = file.length();
             resultantByteArray = extractAudioData(file);
             compressButton.setDisable(false);
@@ -60,7 +60,6 @@ public class Controller {
     public void initiateCompression(ActionEvent event) throws IOException, DataFormatException {
         compress(resultantByteArray);
     }
-
 
     private short[] extractAudioData(File file) {
         try {
@@ -72,7 +71,7 @@ public class Controller {
             int numChannels = audioInputStream.getFormat().getChannels();
             int numBytes = (int) file.length();
             byte[] audioBytes = new byte[numBytes];
-            short[] intervalDiffs = new short[numBytes/2];
+            short[] intervalDiffs = new short[numBytes / 2];
             try {
                 int numBytesRead = 0;
                 int numFramesRead = 0;
@@ -121,8 +120,8 @@ public class Controller {
                             bb.order(ByteOrder.LITTLE_ENDIAN);
                             short audioAmplitudeRight = bb.getShort();
 
-                            intervalDiffs[0] = (short) ((audioAmplitudeLeft+audioAmplitudeRight)/2); // mid channel
-                            intervalDiffs[1] = (short) ((audioAmplitudeLeft-audioAmplitudeRight)/2); // side channel
+                            intervalDiffs[0] = (short) ((audioAmplitudeLeft + audioAmplitudeRight) / 2); // mid channel
+                            intervalDiffs[1] = (short) ((audioAmplitudeLeft - audioAmplitudeRight) / 2); // side channel
                             System.out.println(audioAmplitudeLeft);
                             System.out.println(audioAmplitudeRight);
 
@@ -153,8 +152,8 @@ public class Controller {
                             short diffChannel2 = (short) (audioAmplitudeRight2 - audioAmplitudeRight1);
 
 
-                            intervalDiffs[y] = (short) ((diffChannel1+diffChannel2)/2); // mid channel
-                            intervalDiffs[y+1] = (short) ((diffChannel1-diffChannel2)/2); // side channel
+                            intervalDiffs[y] = (short) ((diffChannel1 + diffChannel2) / 2); // mid channel
+                            intervalDiffs[y + 1] = (short) ((diffChannel1 - diffChannel2) / 2); // side channel
                         }
                         x += 4;
                         y += 2;
@@ -172,17 +171,8 @@ public class Controller {
         }
     }
 
-    public static<Byte> byte[] subArray(byte[] array, int beg, int end) {
-        return Arrays.copyOfRange(array, beg, end + 1);
-    }
-
-    public static<Short> short[] subArray(short[] array, int beg, int end) {
-        return Arrays.copyOfRange(array, beg, end + 1);
-    }
-
     public void compress(short[] shortArray) throws DataFormatException, IOException {
-//        short[] shortArr = {23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21};
-//        // https://stackoverflow.com/questions/2984538/how-to-use-bytearrayoutputstream-and-dataoutputstream-simultaneously-in-java
+        // https://stackoverflow.com/questions/2984538/how-to-use-bytearrayoutputstream-and-dataoutputstream-simultaneously-in-java
         short[] subShort = subArray(shortArray, 0, 50);
         System.out.println(Arrays.toString(subShort));
 
@@ -197,14 +187,6 @@ public class Controller {
         byte[] subarray = subArray(bytes, 0, 50);
         System.out.println(Arrays.toString(subarray));
 
-        File originalAudio = new File("original");
-        // https://stackoverflow.com/questions/4350084/byte-to-file-in-java/4350109
-        try (FileOutputStream stream = new FileOutputStream(originalAudio)) {
-            stream.write(bytes);
-            stream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         byte[] output = new byte[bytes.length];
         Deflater compressor = new Deflater();
         compressor.setInput(bytes);
@@ -213,7 +195,7 @@ public class Controller {
 //        System.out.println(compressedDataLength);
         compressor.end();
         byte[] finalOutput = new byte[compressedDataLength];
-        System.arraycopy(output, 0, finalOutput, 0, compressedDataLength );
+        System.arraycopy(output, 0, finalOutput, 0, compressedDataLength);
 
         byte[] subarray2 = subArray(finalOutput, 0, 50);
         System.out.println(Arrays.toString(subarray2));
@@ -225,19 +207,8 @@ public class Controller {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        compressedFileSizeLabel.setText(String.format("%.2f", (float) (compressedAudioFile.length()/1024)) + " KB");
-        compressionRateLabel.setText(String.valueOf(originalFileSize/compressedAudioFile.length()));
-//        Inflater decompresser = new Inflater();
-//        decompresser.setInput(output, 0, compressedDataLength);
-//        byte[] result = new byte[100];
-//        int resultLength = decompresser.inflate(result);
-//        decompresser.end();
-//        System.out.println(Arrays.toString(result));
-
-
-
-
-
+        compressedFileSizeLabel.setText(String.format("%.2f", (float) (compressedAudioFile.length() / 1024)) + " KB");
+        compressionRateLabel.setText(String.valueOf(originalFileSize / compressedAudioFile.length()));
     }
 
 }
