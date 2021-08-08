@@ -123,6 +123,10 @@ public class Controller {
 
                             intervalDiffs[0] = (short) ((audioAmplitudeLeft+audioAmplitudeRight)/2); // mid channel
                             intervalDiffs[1] = (short) ((audioAmplitudeLeft-audioAmplitudeRight)/2); // side channel
+                            System.out.println(audioAmplitudeLeft);
+                            System.out.println(audioAmplitudeRight);
+
+
                         } else {
                             ByteBuffer bb = ByteBuffer.wrap(audioBytes, x - 4, 2);
                             bb.order(ByteOrder.LITTLE_ENDIAN);
@@ -139,6 +143,11 @@ public class Controller {
                             bb = ByteBuffer.wrap(audioBytes, x + 2, 2);
                             bb.order(ByteOrder.LITTLE_ENDIAN);
                             short audioAmplitudeRight2 = bb.getShort();
+
+                            if (x < 50) {
+                                System.out.println(audioAmplitudeLeft1 + " " + audioAmplitudeLeft2);
+                                System.out.println(audioAmplitudeRight1 + " " + audioAmplitudeRight2);
+                            }
 
                             short diffChannel1 = (short) (audioAmplitudeLeft2 - audioAmplitudeLeft1);
                             short diffChannel2 = (short) (audioAmplitudeRight2 - audioAmplitudeRight1);
