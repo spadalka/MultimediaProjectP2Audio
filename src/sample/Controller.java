@@ -11,14 +11,20 @@ import javafx.stage.Stage;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.zip.DataFormatException;
+import java.util.zip.Deflater;
+import java.util.zip.Inflater;
+
+import static javafx.scene.input.KeyCode.T;
 
 public class Controller {
     final FileChooser fileChooser = new FileChooser();
@@ -35,15 +41,22 @@ public class Controller {
     @FXML
     private Label compressionRateLabel;
 
+    private short[] resultantByteArray;
+
     public void openFileAudio(ActionEvent event) throws IOException {
         File file = fileChooser.showOpenDialog(stage);
         if (file != null) {
             originalFileSizeLabel.setText(file.length() + " bytes");
-            extractAudioData(file);
+            resultantByteArray = extractAudioData(file);
         }
     }
 
-    private void extractAudioData(File file) {
+    public void initiateCompression(ActionEvent event) throws IOException, DataFormatException {
+        compress(resultantByteArray);
+    }
+
+
+    private short[] extractAudioData(File file) {
         try {
             AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(file);
             int bytesPerFrame = audioInputStream.getFormat().getFrameSize();
@@ -72,6 +85,7 @@ public class Controller {
                             bb.order(ByteOrder.LITTLE_ENDIAN);
                             short audioAmplitude1 = bb.getShort();
                             intervalDiffs[0] = audioAmplitude1;
+                            System.out.println(audioAmplitude1);
 
                         } else {
                             ByteBuffer bb = ByteBuffer.wrap(audioBytes, x - 2, 2);
@@ -84,6 +98,10 @@ public class Controller {
 
                             short difference = (short) (audioAmplitude2 - audioAmplitude1);
                             intervalDiffs[y] = difference;
+
+                            if (x < 50) {
+                                System.out.println(audioAmplitude1 + " " + audioAmplitude2);
+                            }
                         }
                         x += 2;
                         y++;
@@ -127,15 +145,83 @@ public class Controller {
                         y += 2;
                     }
                 }
+                return intervalDiffs;
 
             } catch (Exception ex) {
                 System.out.println("no1");
+                return null;
             }
         } catch (Exception e) {
             System.out.println("no2");
+            return null;
         }
     }
 
-    public void compress(ActionEvent event) {
+    public static<Byte> byte[] subArray(byte[] array, int beg, int end) {
+        return Arrays.copyOfRange(array, beg, end + 1);
     }
+
+    public static<Short> short[] subArray(short[] array, int beg, int end) {
+        return Arrays.copyOfRange(array, beg, end + 1);
+    }
+
+    public void compress(short[] shortArray) throws DataFormatException, IOException {
+//        short[] shortArr = {23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21, 23, 34, 423, 43, 21};
+//        // https://stackoverflow.com/questions/2984538/how-to-use-bytearrayoutputstream-and-dataoutputstream-simultaneously-in-java
+        short[] subShort = subArray(shortArray, 0, 50);
+        System.out.println(Arrays.toString(subShort));
+
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(baos);
+        for (short value : shortArray) {
+            dos.writeShort(value);
+        }
+        byte[] bytes = baos.toByteArray();
+
+        byte[] subarray = subArray(bytes, 0, 50);
+        System.out.println(Arrays.toString(subarray));
+
+        File originalAudio = new File("original");
+        // https://stackoverflow.com/questions/4350084/byte-to-file-in-java/4350109
+        try (FileOutputStream stream = new FileOutputStream(originalAudio)) {
+            stream.write(bytes);
+            stream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        byte[] output = new byte[bytes.length];
+        Deflater compressor = new Deflater();
+        compressor.setInput(bytes);
+        compressor.finish();
+        int compressedDataLength = compressor.deflate(output);
+//        System.out.println(compressedDataLength);
+        compressor.end();
+        byte[] finalOutput = new byte[compressedDataLength];
+        System.arraycopy(output, 0, finalOutput, 0, compressedDataLength );
+
+        byte[] subarray2 = subArray(finalOutput, 0, 50);
+        System.out.println(Arrays.toString(subarray2));
+
+        File compressedAudioFile = new File("compressedAudio");
+        // https://stackoverflow.com/questions/4350084/byte-to-file-in-java/4350109
+        try (FileOutputStream stream = new FileOutputStream(compressedAudioFile)) {
+            stream.write(finalOutput);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+//        Inflater decompresser = new Inflater();
+//        decompresser.setInput(output, 0, compressedDataLength);
+//        byte[] result = new byte[100];
+//        int resultLength = decompresser.inflate(result);
+//        decompresser.end();
+//        System.out.println(Arrays.toString(result));
+
+
+
+
+
+    }
+
 }
