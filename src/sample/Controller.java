@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -40,14 +41,19 @@ public class Controller {
     private Label compressedFileSizeLabel;
     @FXML
     private Label compressionRateLabel;
+    @FXML
+    private Button compressButton;
 
     private short[] resultantByteArray;
+    private float originalFileSize;
 
     public void openFileAudio(ActionEvent event) throws IOException {
         File file = fileChooser.showOpenDialog(stage);
         if (file != null) {
-            originalFileSizeLabel.setText(file.length() + " bytes");
+            originalFileSizeLabel.setText(String.format("%.2f", (float) file.length()/1024) + " KB");
+            originalFileSize = file.length();
             resultantByteArray = extractAudioData(file);
+            compressButton.setDisable(false);
         }
     }
 
@@ -210,7 +216,8 @@ public class Controller {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        compressedFileSizeLabel.setText(String.format("%.2f", (float) (compressedAudioFile.length()/1024)) + " KB");
+        compressionRateLabel.setText(String.valueOf(originalFileSize/compressedAudioFile.length()));
 //        Inflater decompresser = new Inflater();
 //        decompresser.setInput(output, 0, compressedDataLength);
 //        byte[] result = new byte[100];

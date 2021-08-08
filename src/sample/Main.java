@@ -13,8 +13,9 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("audioProgramMain.fxml")));
-        primaryStage.setTitle("Hello World");
+        primaryStage.setTitle("Audio Compressor");
         primaryStage.setScene(new Scene(root, 600, 300));
+        root.getChildrenUnmodifiable().get(3).setDisable(true);
         primaryStage.show();
     }
 
