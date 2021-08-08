@@ -21,10 +21,6 @@ import java.util.zip.Deflater;
 public class Controller {
     final FileChooser fileChooser = new FileChooser();
     private Stage stage;
-    private Scene scene;
-    private Parent root;
-
-    private int totalFramesRead = 0;
 
     @FXML
     private Label originalFileSizeLabel;
@@ -35,6 +31,7 @@ public class Controller {
     @FXML
     private Button compressButton;
 
+    private int totalFramesRead = 0;
     private short[] resultantByteArray;
     private float originalFileSize;
 
@@ -63,6 +60,7 @@ public class Controller {
 
     private short[] extractAudioData(File file) {
         try {
+            // https://docs.oracle.com/javase/tutorial/sound/converters.html
             AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(file);
             int bytesPerFrame = audioInputStream.getFormat().getFrameSize();
             if (bytesPerFrame == AudioSystem.NOT_SPECIFIED) {
